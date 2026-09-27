@@ -1,0 +1,8 @@
+**/.terraform/**
+**.hcl
+**/plan/**
+**.tfvars
+***.tfstate
+**.tfstate.backup
+**/lambda/.venv/**
+**/lambda/__pycache__/**
