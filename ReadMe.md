@@ -1,7 +1,16 @@
 ## Description
 
-This will create a new VPC and ecs cluster to run ecs task in private subnets
+This module will create the following:
+* VPC with private and public subnets in 2 AZs.
+* Internet gateway.
+* public and private route tables.
+* ECS task which runs a provided image.
+* EC2 instance which has a mongodb docker container running
+* VPC endpoints requried for the ECS task and EC2 instances to run
+* Security groups requried for ECS and Ec2
+* IAM roles
 
+The ECS task and EC2 instances are deployed in private subnet of the vpc
 
 ### Describe status
 
@@ -10,6 +19,12 @@ aws ecs describe-services \
   --cluster home-inventory-app-cluster \
   --services home-inventory-app-service \
   --query 'services[0].{status: status, desired: desiredCount, running: runningCount, pending: pendingCount}'
+```
+
+### Exec into the ecs task
+Use the correct profile
+```
+aws ecs execute-command --cluster home-inventory-app-cluster --task <taskid> --container home-inventory-app --interactive --command '/bin/sh'
 ```
 
 
@@ -58,4 +73,3 @@ Requires the following
  ### Issues
 ~~The Task is unable to pull image from ECR
 Not able to get Authtoken so need to check if the I am role requires the role and then check if vpc endpoint is required.~~
-The issue is resolved by deploying the ecs task in public subnet and enabling public ip on the task. This allowed the task to talk to ECR via internet gateway and download the image
