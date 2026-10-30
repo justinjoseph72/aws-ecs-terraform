@@ -143,7 +143,7 @@ resource "aws_ecs_task_definition" "this" {
       }
 
       environment = [
-        { name = "MANAGEMENT_HEALTH_MONGODB_ENABLED", value = "false" },
+        { name = "MANAGEMENT_HEALTH_MONGODB_ENABLED", value = "true" },
       ]
     }
   ])

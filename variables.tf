@@ -102,3 +102,29 @@ variable "task_memory" {
   type        = string
   default     = "512"
 }
+
+
+
+variable "ec2_instance_type" {
+  description = "EC2 instance type for the MongoDB server"
+  type        = string
+  default     = "t3a.micro"
+}
+
+variable "mongo_root_user" {
+  description = "MongoDB root username"
+  type        = string
+  default     = "admin"
+}
+
+variable "mongo_root_pass" {
+  description = "MongoDB root password"
+  type        = string
+  default     = "password"
+}
+
+variable "mongoDb_image" {
+  description = "Docker image for MongoDB"
+  type        = string
+  default     = "mongodb"
+}

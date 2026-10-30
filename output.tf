@@ -34,30 +34,24 @@ output "ecs_cluster_name" {
   value = aws_ecs_cluster.this.name
 }
 
-output "aws_vpc_endpoint_ecr_api_id" {
-  value = aws_vpc_endpoint.ecr_api.id
+output "aws_vpc_endpoint_s3_id" {
+  value = aws_vpc_endpoint.s3_endpoint.id
 }
 
-output "aws_vpc_endpoint_ecr_api_network_interface_ids" {
-  value = aws_vpc_endpoint.ecr_api.network_interface_ids
+output "aws_vpc_endpoint_sts_id" {
+  value = aws_vpc_endpoint.all_vpc_endpoint["sts"].id
+}
+
+output "aws_vpc_endpoint_ecr_api_id" {
+  value = aws_vpc_endpoint.all_vpc_endpoint["ecr.api"].id
 }
 
 output "aws_vpc_endpoint_ecr_dkr_id" {
-  value = aws_vpc_endpoint.ecr_dkr.id
+  value = aws_vpc_endpoint.all_vpc_endpoint["ecr.dkr"].id
 }
 
-output "aws_vpc_endpoint_ecr_dkr_network_interface_ids" {
-  value = aws_vpc_endpoint.ecr_dkr.network_interface_ids
-}
 
-output "aws_vpc_endpoint_s3_id" {
-  value = aws_vpc_endpoint.s3.id
-}
 
-output "aws_vpc_endpoint_cloudwatch_logs_id" {
-  value = aws_vpc_endpoint.cloudwatch_logs.id
-}
-
-output "aws_vpc_endpoint_cloudwatch_logs_network_interface_ids" {
-  value = aws_vpc_endpoint.cloudwatch_logs.network_interface_ids
+output "mongodb_ec2_instance_id" {
+  value = aws_instance.mongodb_instance.id
 }

@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Install and start Docker
+dnf install -y docker
+systemctl enable --now docker
+
+# Persistent data directory (mount your EBS volume here first if you use one)
+mkdir -p /data/mongo
+
+## login to ECR
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${region}.amazonaws.com
+
+# Replace the password, or fetch it from SSM (see below)
+MONGO_ROOT_USER=${mongo_root_user}
+MONGO_ROOT_PASS=${mongo_root_pass}
+
+REGISTRY="${account_id}.dkr.ecr.${region}.amazonaws.com"
+IMAGE="$${REGISTRY}/${repo}:${tag}"
+echo "starting container with image: $IMAGE"
+
+docker run -d \
+  --name mongo \
+  --restart unless-stopped \
+  -p 27017:27017 \
+  -v /data/mongo:/data/db \
+  -e MONGO_INITDB_ROOT_USERNAME="$MONGO_ROOT_USER" \
+  -e MONGO_INITDB_ROOT_PASSWORD="$MONGO_ROOT_PASS" \
+   "$IMAGE" --wiredTigerCacheSizeGB 0.25

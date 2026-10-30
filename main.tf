@@ -92,8 +92,8 @@ resource "aws_route_table_association" "private_rt_assoc" {
 }
 
 ## VPC Endpoints for ECS and ECR
-resource "aws_security_group" "vpec_ecr_sg" {
-  name        = "${var.app_name}-vpec_ecr_api-sg"
+resource "aws_security_group" "vpec_sg_ecs" {
+  name        = "${var.app_name}-vpec_ecs_api-sg"
   description = "Security group for ECS task to reach ECR API"
   vpc_id      = aws_vpc.ecs_learning_vpc.id
 
@@ -112,35 +112,68 @@ resource "aws_security_group" "vpec_ecr_sg" {
   }
 }
 
-resource "aws_vpc_endpoint" "ecr_api" {
-  vpc_id              = aws_vpc.ecs_learning_vpc.id
-  service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
-  vpc_endpoint_type   = "Interface"
-  security_group_ids  = [aws_security_group.vpec_ecr_sg.id]
-  subnet_ids          = aws_subnet.private_subnets[*].id
-  private_dns_enabled = true
+resource "aws_security_group" "vpec_sg_mongo" {
+  name        = "${var.app_name}-vpec_mongo-sg"
+  description = "Security group for MongoDB instance to reach VPC endpoints"
+  vpc_id      = aws_vpc.ecs_learning_vpc.id
 
+  ingress {
+    from_port   = 27017
+    to_port     = 27017
+    protocol    = "tcp"
+    # cidr_blocks = var.private_subnet_cidrs
+    security_groups = [aws_security_group.ecs_task_sg.id]
+  }
+
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+resource "aws_security_group" "vpc_endpoint_sg" {
+  name        = "${var.app_name}-vpc-endpoint-sg"
+  description = "Security group for Vpc"
+  vpc_id      = aws_vpc.ecs_learning_vpc.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    
+    security_groups = [aws_security_group.ecs_task_sg.id, aws_security_group.vpec_sg_mongo.id]
+
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  }
+
+resource "aws_vpc_endpoint" "all_vpc_endpoint" {
+  vpc_id            = aws_vpc.ecs_learning_vpc.id
+  for_each          = toset(["ecr.api", "ecr.dkr", "logs", "ssm", "ssmmessages", "ec2messages", "sts"])
+  service_name      = "com.amazonaws.${var.aws_region}.${each.key}"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [ aws_security_group.vpc_endpoint_sg.id]
+  subnet_ids        = aws_subnet.private_subnets[*].id
+  private_dns_enabled = true
   tags = {
-    Name    = "${var.project_name}-vpec-ecr-api"
+    Name    = "${var.project_name}-vpec-${each.key}"
     Creator = var.creator_tag
   }
 }
 
-resource "aws_vpc_endpoint" "ecr_dkr" {
-  vpc_id              = aws_vpc.ecs_learning_vpc.id
-  service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
-  vpc_endpoint_type   = "Interface"
-  security_group_ids  = [aws_security_group.vpec_ecr_sg.id]
-  subnet_ids          = aws_subnet.private_subnets[*].id
-  private_dns_enabled = true
 
-  tags = {
-    Name    = "${var.project_name}-vpec-ecr-dkr"
-    Creator = var.creator_tag
-  }
-}
 
-resource "aws_vpc_endpoint" "s3" {
+resource "aws_vpc_endpoint" "s3_endpoint" {
   vpc_id            = aws_vpc.ecs_learning_vpc.id
   service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
@@ -153,17 +186,4 @@ resource "aws_vpc_endpoint" "s3" {
   }
 }
 
-resource "aws_vpc_endpoint" "cloudwatch_logs" {
-  vpc_id              = aws_vpc.ecs_learning_vpc.id
-  service_name        = "com.amazonaws.${var.aws_region}.logs"
-  vpc_endpoint_type   = "Interface"
-  security_group_ids  = [aws_security_group.vpec_ecr_sg.id]
-  subnet_ids          = aws_subnet.private_subnets[*].id
-  private_dns_enabled = true
-
-  tags = {
-    Name    = "${var.project_name}-vpec-logs"
-    Creator = var.creator_tag
-  }
-}
 
