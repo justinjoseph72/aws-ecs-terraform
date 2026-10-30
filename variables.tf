@@ -128,3 +128,9 @@ variable "mongoDb_image" {
   type        = string
   default     = "mongodb"
 }
+
+variable "ecs_mongo_enabled" {
+  description = "Whether to enable MongoDB for ECS tasks"
+  type        = string
+  default     = "false"
+}

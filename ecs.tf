@@ -78,6 +78,27 @@ resource "aws_iam_role_policy" "task_metadata_read" {
   })
 }
 
+resource "aws_iam_role_policy" "task_exec_role_policy" {
+  name = "${var.app_name}-ecs-exec-role-policy"
+  role = aws_iam_role.task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # -----------------------------------------------------------------------
 # Security Group for the ECS task
 # -----------------------------------------------------------------------
@@ -143,7 +164,11 @@ resource "aws_ecs_task_definition" "this" {
       }
 
       environment = [
-        { name = "MANAGEMENT_HEALTH_MONGODB_ENABLED", value = "true" },
+        { name = "MANAGEMENT_HEALTH_MONGODB_ENABLED", value = var.ecs_mongo_enabled },
+        { name = "SPRING_MONGODB_ENABLED", value = var.ecs_mongo_enabled },
+        { name = "SPRING_MONGODB_HOST", value = aws_instance.mongodb_instance.private_dns },
+        { name = "SPRING_MONGODB_USERNAME", value = var.mongo_root_user },
+        { name = "SPRING_MONGODB_PASSWORD", value = var.mongo_root_pass },
       ]
     }
   ])
